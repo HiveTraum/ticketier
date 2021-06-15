@@ -1,9 +1,7 @@
 package ticket
 
 import (
-	"github.com/google/uuid"
 	"src/domain"
-	"time"
 )
 
 type ticketService struct {
@@ -18,25 +16,25 @@ func NewTicketService(repository domain.TicketRepository) domain.TicketService {
 }
 
 func (service *ticketService) Create(ticket *domain.CreateTicketDTO) (*domain.Ticket, error) {
-	ticketID := uuid.New()
-
-	_ticket := &domain.Ticket{
-		ID:        ticketID,
-		SubjectID: ticket.SubjectID,
-		CreatedBy: ticket.CreatedBy,
-		CreatedAt: time.Now(),
-	}
-
-	for _, answer := range ticket.Answers {
-		answer.TicketID = ticketID
-	}
-
-	_answers, err := service.ticketAnswerService.Create(ticket.Answers)
+	_ticket, err := New(ticket)
 	if err != nil {
 		return nil, err
 	}
 
-	_attachments, err := service.ticketAttachmentService.Create(ticket.Attachments)
+	for _, answer := range ticket.Answers {
+		answer.TicketID = _ticket.ID
+	}
+
+	for _, attachment := range ticket.Attachments {
+		attachment.TicketID = _ticket.ID
+	}
+
+	_answers, err := service.ticketAnswerService.New(ticket.Answers)
+	if err != nil {
+		return nil, err
+	}
+
+	_attachments, err := service.ticketAttachmentService.New(ticket.Attachments)
 	if err != nil {
 		return nil, err
 	}

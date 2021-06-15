@@ -2,27 +2,29 @@ package ticket_answer
 
 import (
 	"github.com/google/uuid"
-	"reflect"
 	"src/domain"
 )
 
 type ticketAnswerService struct {
+	repository             domain.TicketAnswerRepository
 	subjectFieldRepository domain.SubjectFieldRepository
 }
 
-func NewTicketAnswerService() domain.TicketAnswerService {
-	return &ticketAnswerService{}
+func NewTicketAnswerService(repository domain.TicketAnswerRepository, subjectFieldRepository domain.SubjectFieldRepository) domain.TicketAnswerService {
+	return &ticketAnswerService{repository: repository, subjectFieldRepository: subjectFieldRepository}
 }
 
-func (service *ticketAnswerService) Create(answers []*domain.CreateTicketAnswerDTO) ([]*domain.TicketAnswer, error) {
+func (service *ticketAnswerService) New(answers []*domain.CreateTicketAnswerDTO) ([]*domain.TicketAnswer, error) {
 	_answers := make([]*domain.TicketAnswer, len(answers))
-	for i, answer := range answers {
-		subjectField, err := service.subjectFieldRepository.Get(answer.SubjectFieldID)
-		if err != nil {
-			return nil, err
-		}
 
-		_answer, err := create(answer, subjectField)
+	subjectFields, err := service.getSubjectFieldsByAnswers(answers)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, answer := range answers {
+		answer.SubjectField = subjectFields[answer.SubjectFieldID]
+		_answer, err := New(answer)
 		if err != nil {
 			return nil, err
 		}
@@ -33,112 +35,25 @@ func (service *ticketAnswerService) Create(answers []*domain.CreateTicketAnswerD
 	return _answers, nil
 }
 
-func create(answer *domain.CreateTicketAnswerDTO, subjectField *domain.SubjectField) (*domain.TicketAnswer, error) {
-
-	_answer := &domain.TicketAnswer{
-		ID:             uuid.New(),
-		TicketID:       answer.TicketID,
-		Title:          subjectField.Title,
-		ProgrammaticID: subjectField.ProgrammaticID,
-	}
-
-	parsedTicketAnswerValue, err := parseAnswerValue(subjectField.Type, answer.Value, subjectField.Required)
-	if err != nil {
-		if err == ticketAnswerValueTypeError {
-			return nil, &domain.TicketAnswerValueTypeError{AnswerTitle: subjectField.Title, Value: answer.Value}
-		}
-
-		return nil, err
-	}
-
-	answerValue, err := createAnswerValue(parsedTicketAnswerValue)
+func (service *ticketAnswerService) Create(answers []*domain.CreateTicketAnswerDTO) ([]*domain.TicketAnswer, error) {
+	_answers, err := service.New(answers)
 	if err != nil {
 		return nil, err
 	}
 
-	_answer.Value = answerValue
+	err = service.repository.Save(_answers)
+	if err != nil {
+		return nil, err
+	}
 
-	return _answer, nil
+	return _answers, nil
 }
 
-func createAnswerValue(parsedAnswerValue *ticketAnswerValue) (*domain.TicketAnswerValue, error) {
-	answerValue := &domain.TicketAnswerValue{Type: parsedAnswerValue._type}
-	if parsedAnswerValue.isNil {
-		return answerValue, nil
+func (service *ticketAnswerService) getSubjectFieldsByAnswers(answers []*domain.CreateTicketAnswerDTO) (map[uuid.UUID]*domain.SubjectField, error) {
+	subjectFieldIdentifiers := make([]uuid.UUID, len(answers))
+	for i, answer := range answers {
+		subjectFieldIdentifiers[i] = answer.SubjectFieldID
 	}
 
-	switch parsedAnswerValue._type {
-	case domain.Flag:
-		answerValue.Flag = &parsedAnswerValue._bool
-	case domain.Number:
-		answerValue.Number = &parsedAnswerValue.number
-	case domain.String:
-		answerValue.String = &parsedAnswerValue._string
-	}
-
-	return answerValue, nil
-}
-
-func parseAnswerValue(fieldType domain.FieldType, value interface{}, isRequired bool) (*ticketAnswerValue, error) {
-	isNil := value == nil || reflect.ValueOf(value).Kind() == reflect.Ptr && reflect.ValueOf(value).IsNil()
-	if isNil {
-		if isRequired {
-			return nil, domain.AnswerRequired
-		} else {
-			return &ticketAnswerValue{_type: fieldType, isNil: isNil}, nil
-		}
-	}
-
-	switch fieldType {
-	case domain.Number:
-		return parseAnswerValueNumber(value)
-	case domain.String:
-		return parseAnswerValueString(value)
-	case domain.Flag:
-		return parseAnswerValueBoolean(value)
-	default:
-		return nil, domain.FileTypeNotFound
-	}
-}
-
-func parseAnswerValueNumber(value interface{}) (*ticketAnswerValue, error) {
-	var _value float64
-	switch v := value.(type) {
-	case float64:
-		_value = v
-	case float32:
-		_value = float64(v)
-	case int64:
-		_value = float64(v)
-	case int32:
-		_value = float64(v)
-	case int16:
-		_value = float64(v)
-	case int8:
-		_value = float64(v)
-	case int:
-		_value = float64(v)
-	default:
-		return nil, ticketAnswerValueTypeError
-	}
-
-	return &ticketAnswerValue{_type: domain.Number, number: _value}, nil
-}
-
-func parseAnswerValueString(value interface{}) (*ticketAnswerValue, error) {
-	_value, ok := value.(string)
-	if !ok {
-		return nil, ticketAnswerValueTypeError
-	}
-
-	return &ticketAnswerValue{_type: domain.String, _string: _value}, nil
-}
-
-func parseAnswerValueBoolean(value interface{}) (*ticketAnswerValue, error) {
-	_value, ok := value.(bool)
-	if !ok {
-		return nil, ticketAnswerValueTypeError
-	}
-
-	return &ticketAnswerValue{_type: domain.Flag, _bool: _value}, nil
+	return service.subjectFieldRepository.FetchByIdentifiers(subjectFieldIdentifiers)
 }

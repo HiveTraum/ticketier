@@ -39,13 +39,13 @@ func TestTicketAnswerService_createNumberValue(t *testing.T) {
 	t.Parallel()
 
 	createTicketAnswerDTO := &domain.CreateTicketAnswerDTO{SubjectFieldID: uuid.New(), TicketID: uuid.New(), Value: 1}
-	subjectField := &domain.SubjectField{
+	createTicketAnswerDTO.SubjectField = &domain.SubjectField{
 		ID:        createTicketAnswerDTO.SubjectFieldID,
 		SubjectID: uuid.New(),
 		Type:      domain.Number,
 	}
 
-	answer, err := create(createTicketAnswerDTO, subjectField)
+	answer, err := New(createTicketAnswerDTO)
 	value := 1.0
 	assert.Nil(t, err)
 	assert.Equal(t, &domain.TicketAnswer{
@@ -62,13 +62,13 @@ func TestTicketAnswerService_createNilValue(t *testing.T) {
 	t.Parallel()
 
 	createTicketAnswerDTO := &domain.CreateTicketAnswerDTO{SubjectFieldID: uuid.New(), TicketID: uuid.New(), Value: nil}
-	subjectField := &domain.SubjectField{
+	createTicketAnswerDTO.SubjectField = &domain.SubjectField{
 		ID:        createTicketAnswerDTO.SubjectFieldID,
 		SubjectID: uuid.New(),
 		Type:      domain.Number,
 	}
 
-	answer, err := create(createTicketAnswerDTO, subjectField)
+	answer, err := New(createTicketAnswerDTO)
 	assert.Nil(t, err)
 	assert.Equal(t, &domain.TicketAnswer{
 		ID:       answer.ID,
@@ -83,14 +83,14 @@ func TestTicketAnswerService_createNilRequiredValue(t *testing.T) {
 	t.Parallel()
 
 	createTicketAnswerDTO := &domain.CreateTicketAnswerDTO{SubjectFieldID: uuid.New(), TicketID: uuid.New(), Value: nil}
-	subjectField := &domain.SubjectField{
+	createTicketAnswerDTO.SubjectField = &domain.SubjectField{
 		ID:        createTicketAnswerDTO.SubjectFieldID,
 		SubjectID: uuid.New(),
 		Type:      domain.Number,
 		Required:  true,
 	}
 
-	answer, err := create(createTicketAnswerDTO, subjectField)
+	answer, err := New(createTicketAnswerDTO)
 	assert.Equal(t, domain.AnswerRequired, err)
 	assert.Nil(t, answer)
 }

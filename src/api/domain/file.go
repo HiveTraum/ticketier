@@ -3,6 +3,11 @@ package domain
 import "net/url"
 
 type FileRepository interface {
-	Upload(path string, bytes []byte) (url.URL, error)
-	Get(path string) (url.URL, error)
+	Upload(files []*UploadFileDTO) error
+	URL(path string) (url.URL, error)
+}
+
+type UploadFileDTO struct {
+	Payload []byte
+	Path    string
 }

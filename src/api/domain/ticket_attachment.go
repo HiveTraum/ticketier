@@ -13,6 +13,7 @@ type TicketAttachment struct {
 	MimeType  string    `json:"mimeType,omitempty"`
 	Extension string    `json:"extension,omitempty"`
 	URL       url.URL   `json:"url"`
+	Payload   []byte
 }
 
 type CreateTicketAttachmentDTO struct {
@@ -23,8 +24,10 @@ type CreateTicketAttachmentDTO struct {
 
 type TicketAttachmentRepository interface {
 	Get(id uuid.UUID) (*TicketAttachment, error)
+	Save(attachments []*TicketAttachment) error
 }
 
 type TicketAttachmentService interface {
 	Create(attachments []*CreateTicketAttachmentDTO) ([]*TicketAttachment, error)
+	New(attachments []*CreateTicketAttachmentDTO) ([]*TicketAttachment, error)
 }

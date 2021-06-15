@@ -12,7 +12,13 @@ type SubjectField struct {
 	Type           FieldType
 }
 
+type SubjectFieldQuery struct {
+	ID []uuid.UUID
+}
+
 type SubjectFieldRepository interface {
 	GetBySubjectID(subjectID uuid.UUID) ([]*SubjectField, error)
 	Get(id uuid.UUID) (*SubjectField, error)
+	Fetch(query *SubjectFieldQuery) ([]*SubjectField, error)
+	FetchByIdentifiers(identifiers []uuid.UUID) (map[uuid.UUID]*SubjectField, error)
 }

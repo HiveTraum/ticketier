@@ -6,12 +6,17 @@ import (
 	"src/domain"
 )
 
-func New(dto *domain.CreateTicketAnswerDTO) (*domain.TicketAnswer, error) {
-	if dto.SubjectField == nil {
+type ticketAnswerEntity struct {
+}
+
+func NewTicketAnswerEntity() domain.TicketAnswerEntity {
+	return &ticketAnswerEntity{}
+}
+
+func (entity *ticketAnswerEntity) New(dto *domain.CreateTicketAnswerDTO, subjectField *domain.SubjectField) (*domain.TicketAnswer, error) {
+	if subjectField == nil {
 		return nil, domain.SubjectFieldNotFound(dto.SubjectFieldID)
 	}
-
-	subjectField := dto.SubjectField
 
 	_answer := &domain.TicketAnswer{
 		ID:             uuid.New(),

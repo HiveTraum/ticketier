@@ -6,6 +6,7 @@ import (
 )
 
 type ticketAnswerService struct {
+	entity                 domain.TicketAnswerEntity
 	repository             domain.TicketAnswerRepository
 	subjectFieldRepository domain.SubjectFieldRepository
 }
@@ -23,8 +24,8 @@ func (service *ticketAnswerService) New(answers []*domain.CreateTicketAnswerDTO)
 	}
 
 	for i, answer := range answers {
-		answer.SubjectField = subjectFields[answer.SubjectFieldID]
-		_answer, err := New(answer)
+		subjectField := subjectFields[answer.SubjectFieldID]
+		_answer, err := service.entity.New(answer, subjectField)
 		if err != nil {
 			return nil, err
 		}

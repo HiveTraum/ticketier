@@ -20,15 +20,18 @@ type TicketAnswer struct {
 }
 
 type CreateTicketAnswerDTO struct {
-	TicketID       uuid.UUID     `json:"ticketID,omitempty"`
-	SubjectFieldID uuid.UUID     `json:"subjectFieldID,omitempty"`
-	Value          interface{}   `json:"value,omitempty"`
-	SubjectField   *SubjectField `json:"subjectField,omitempty"`
+	TicketID       uuid.UUID   `json:"ticketID,omitempty"`
+	SubjectFieldID uuid.UUID   `json:"subjectFieldID,omitempty"`
+	Value          interface{} `json:"value,omitempty"`
 }
 
 type TicketAnswerRepository interface {
 	Get(id uuid.UUID) (*TicketAnswer, error)
 	Save(tickets []*TicketAnswer) error
+}
+
+type TicketAnswerEntity interface {
+	New(dto *CreateTicketAnswerDTO, subjectField *SubjectField) (*TicketAnswer, error)
 }
 
 type TicketAnswerService interface {

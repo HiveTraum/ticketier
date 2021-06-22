@@ -39,13 +39,13 @@ func (service *ticketService) Create(ticket *domain.CreateTicketDTO) (*domain.Ti
 		return nil, err
 	}
 
+	_ticket.Answers = _answers
+	_ticket.Attachments = _attachments
+
 	err = service.repository.Save(_ticket)
 	if err != nil {
 		return nil, err
 	}
-
-	_ticket.Answers = _answers
-	_ticket.Attachments = _attachments
 
 	return _ticket, nil
 }

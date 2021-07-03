@@ -32,6 +32,10 @@ func SubjectFieldNotFound(id uuid.UUID) *entityNotFound {
 	return EntityNotFound("subject field", id)
 }
 
+func SubjectNotFound(id uuid.UUID) *entityNotFound {
+	return EntityNotFound("subject", id)
+}
+
 var (
 	FileTypeNotFound = errors.New("file type not found")
 	AnswerRequired   = errors.New("answer is required")

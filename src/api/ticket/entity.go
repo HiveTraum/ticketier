@@ -6,7 +6,18 @@ import (
 	"time"
 )
 
-func New(dto *domain.CreateTicketDTO) (*domain.Ticket, error) {
+type ticketEntity struct {
+}
+
+func NewTicketEntity() domain.TicketEntity {
+	return &ticketEntity{}
+}
+
+func (entity *ticketEntity) NewTicket(DTO *domain.CreateTicketDTO, subject *domain.Subject) (*domain.Ticket, error) {
+	if subject == nil {
+		return nil, domain.SubjectNotFound(DTO.SubjectID)
+	}
+
 	id, err := uuid.NewUUID()
 	if err != nil {
 		return nil, err
@@ -14,8 +25,8 @@ func New(dto *domain.CreateTicketDTO) (*domain.Ticket, error) {
 
 	return &domain.Ticket{
 		ID:        id,
-		SubjectID: dto.SubjectID,
-		CreatedBy: dto.CreatedBy,
+		SubjectID: DTO.SubjectID,
+		CreatedBy: DTO.CreatedBy,
 		CreatedAt: time.Now(),
 	}, nil
 }

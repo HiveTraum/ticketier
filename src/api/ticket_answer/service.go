@@ -1,7 +1,7 @@
 package ticket_answer
 
 import (
-	"github.com/google/uuid"
+	"context"
 	"src/domain"
 )
 
@@ -11,50 +11,25 @@ type ticketAnswerService struct {
 	subjectFieldRepository domain.SubjectFieldRepository
 }
 
-func NewTicketAnswerService(repository domain.TicketAnswerRepository, subjectFieldRepository domain.SubjectFieldRepository) domain.TicketAnswerService {
-	return &ticketAnswerService{repository: repository, subjectFieldRepository: subjectFieldRepository}
+func NewTicketAnswerService(entity domain.TicketAnswerEntity, repository domain.TicketAnswerRepository, subjectFieldRepository domain.SubjectFieldRepository) domain.TicketAnswerService {
+	return &ticketAnswerService{entity: entity, repository: repository, subjectFieldRepository: subjectFieldRepository}
 }
 
-func (service *ticketAnswerService) New(answers []*domain.CreateTicketAnswerDTO) ([]*domain.TicketAnswer, error) {
-	_answers := make([]*domain.TicketAnswer, len(answers))
-
-	subjectFields, err := service.getSubjectFieldsByAnswers(answers)
+func (service *ticketAnswerService) Create(ctx context.Context, DTOs []*domain.CreateTicketAnswerDTO) ([]*domain.TicketAnswer, error) {
+	subjectFields, err := service.subjectFieldRepository.SelectByTicketAnswers(ctx, DTOs)
 	if err != nil {
 		return nil, err
 	}
 
-	for i, answer := range answers {
-		subjectField := subjectFields[answer.SubjectFieldID]
-		_answer, err := service.entity.New(answer, subjectField)
-		if err != nil {
-			return nil, err
-		}
-
-		_answers[i] = _answer
-	}
-
-	return _answers, nil
-}
-
-func (service *ticketAnswerService) Create(answers []*domain.CreateTicketAnswerDTO) ([]*domain.TicketAnswer, error) {
-	_answers, err := service.New(answers)
+	answers, err := service.entity.NewAnswers(DTOs, subjectFields)
 	if err != nil {
 		return nil, err
 	}
 
-	err = service.repository.Save(_answers)
+	err = service.repository.Insert(ctx, answers)
 	if err != nil {
 		return nil, err
 	}
 
-	return _answers, nil
-}
-
-func (service *ticketAnswerService) getSubjectFieldsByAnswers(answers []*domain.CreateTicketAnswerDTO) (map[uuid.UUID]*domain.SubjectField, error) {
-	subjectFieldIdentifiers := make([]uuid.UUID, len(answers))
-	for i, answer := range answers {
-		subjectFieldIdentifiers[i] = answer.SubjectFieldID
-	}
-
-	return service.subjectFieldRepository.FetchByIdentifiers(subjectFieldIdentifiers)
+	return answers, nil
 }

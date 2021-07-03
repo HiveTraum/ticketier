@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"github.com/google/uuid"
 	"net/url"
 )
@@ -22,12 +23,17 @@ type CreateTicketAttachmentDTO struct {
 	Comment  string    `json:"comment,omitempty"`
 }
 
+type TicketAttachmentEntity interface {
+	NewAttachment(DTO *CreateTicketAttachmentDTO) (*TicketAttachment, error)
+	NewAttachments(DTOs []*CreateTicketAttachmentDTO) ([]*TicketAttachment, error)
+}
+
 type TicketAttachmentRepository interface {
-	Get(id uuid.UUID) (*TicketAttachment, error)
-	Save(attachments []*TicketAttachment) error
+	Get(ctx context.Context, id uuid.UUID) (*TicketAttachment, error)
+	Insert(ctx context.Context, attachments []*TicketAttachment) error
+	InsertInTransaction(ctx context.Context, attachments []*TicketAttachment, transactionID uuid.UUID) error
 }
 
 type TicketAttachmentService interface {
-	Create(attachments []*CreateTicketAttachmentDTO) ([]*TicketAttachment, error)
-	New(attachments []*CreateTicketAttachmentDTO) ([]*TicketAttachment, error)
+	Create(ctx context.Context, attachments []*CreateTicketAttachmentDTO) ([]*TicketAttachment, error)
 }

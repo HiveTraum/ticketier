@@ -1,14 +1,15 @@
 package domain
 
 import (
+	"context"
 	"github.com/google/uuid"
 )
 
 type TicketAnswerValue struct {
 	Type   FieldType `json:"type,omitempty"`
-	Number *float64  `json:"number,omitempty"`
-	String *string   `json:"string,omitempty"`
-	Flag   *bool     `json:"flag,omitempty"`
+	Number float64   `json:"number,omitempty"`
+	String string    `json:"string,omitempty"`
+	Flag   bool      `json:"flag,omitempty"`
 }
 
 type TicketAnswer struct {
@@ -25,16 +26,17 @@ type CreateTicketAnswerDTO struct {
 	Value          interface{} `json:"value,omitempty"`
 }
 
-type TicketAnswerRepository interface {
-	Get(id uuid.UUID) (*TicketAnswer, error)
-	Save(tickets []*TicketAnswer) error
+type TicketAnswerEntity interface {
+	NewAnswers(answers []*CreateTicketAnswerDTO, subjectFields []*SubjectField) ([]*TicketAnswer, error)
+	NewAnswer(dto *CreateTicketAnswerDTO, subjectField *SubjectField) (*TicketAnswer, error)
 }
 
-type TicketAnswerEntity interface {
-	New(dto *CreateTicketAnswerDTO, subjectField *SubjectField) (*TicketAnswer, error)
+type TicketAnswerRepository interface {
+	Get(ctx context.Context, id uuid.UUID) (*TicketAnswer, error)
+	Insert(ctx context.Context, tickets []*TicketAnswer) error
+	InsertInTransaction(ctx context.Context, tickets []*TicketAnswer, transactionID uuid.UUID) error
 }
 
 type TicketAnswerService interface {
-	Create(answers []*CreateTicketAnswerDTO) ([]*TicketAnswer, error)
-	New(answers []*CreateTicketAnswerDTO) ([]*TicketAnswer, error)
+	Create(ctx context.Context, answers []*CreateTicketAnswerDTO) ([]*TicketAnswer, error)
 }

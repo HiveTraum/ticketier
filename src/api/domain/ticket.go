@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"github.com/google/uuid"
 	"time"
 )
@@ -21,12 +22,21 @@ type CreateTicketDTO struct {
 	Attachments []*CreateTicketAttachmentDTO `json:"attachments,omitempty"`
 }
 
+type TicketEntity interface {
+	NewTicket(DTO *CreateTicketDTO, subject *Subject) (*Ticket, error)
+}
+
 type TicketRepository interface {
-	Save(ticket *Ticket) error
+	Insert(ctx context.Context, ticket *Ticket) error
+	InsertInTransaction(ctx context.Context, ticket *Ticket, transactionID uuid.UUID) error
 	Get(id uuid.UUID) (*Ticket, error)
-	Fetch() ([]*Ticket, error)
+	Select() ([]*Ticket, error)
+
+	Begin(ctx context.Context) (uuid.UUID, error)
+	Commit(ctx context.Context, transactionID uuid.UUID) error
+	Rollback(ctx context.Context, transactionID uuid.UUID) error
 }
 
 type TicketService interface {
-	Create(ticket *CreateTicketDTO) (*Ticket, error)
+	Create(ctx context.Context, DTO *CreateTicketDTO) (*Ticket, error)
 }

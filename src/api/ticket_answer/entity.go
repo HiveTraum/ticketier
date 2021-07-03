@@ -13,22 +13,43 @@ func NewTicketAnswerEntity() domain.TicketAnswerEntity {
 	return &ticketAnswerEntity{}
 }
 
-func (entity *ticketAnswerEntity) New(dto *domain.CreateTicketAnswerDTO, subjectField *domain.SubjectField) (*domain.TicketAnswer, error) {
+func (entity *ticketAnswerEntity) NewAnswers(DTOs []*domain.CreateTicketAnswerDTO, subjectFields []*domain.SubjectField) ([]*domain.TicketAnswer, error) {
+	answers := make([]*domain.TicketAnswer, len(DTOs))
+	subjectFieldsMapping := make(map[uuid.UUID]*domain.SubjectField)
+
+	for _, subjectField := range subjectFields {
+		subjectFieldsMapping[subjectField.ID] = subjectField
+	}
+
+	for i, DTO := range DTOs {
+		subjectField := subjectFieldsMapping[DTO.SubjectFieldID]
+		answer, err := entity.NewAnswer(DTO, subjectField)
+		if err != nil {
+			return nil, err
+		}
+
+		answers[i] = answer
+	}
+
+	return answers, nil
+}
+
+func (entity *ticketAnswerEntity) NewAnswer(DTO *domain.CreateTicketAnswerDTO, subjectField *domain.SubjectField) (*domain.TicketAnswer, error) {
 	if subjectField == nil {
-		return nil, domain.SubjectFieldNotFound(dto.SubjectFieldID)
+		return nil, domain.SubjectFieldNotFound(DTO.SubjectFieldID)
 	}
 
 	_answer := &domain.TicketAnswer{
 		ID:             uuid.New(),
-		TicketID:       dto.TicketID,
+		TicketID:       DTO.TicketID,
 		Title:          subjectField.Title,
 		ProgrammaticID: subjectField.ProgrammaticID,
 	}
 
-	parsedTicketAnswerValue, err := parseAnswerValue(subjectField.Type, dto.Value, subjectField.Required)
+	parsedTicketAnswerValue, err := parseAnswerValue(subjectField.Type, DTO.Value, subjectField.Required)
 	if err != nil {
 		if err == ticketAnswerValueTypeError {
-			return nil, &domain.TicketAnswerValueTypeError{AnswerTitle: subjectField.Title, Value: dto.Value}
+			return nil, &domain.TicketAnswerValueTypeError{AnswerTitle: subjectField.Title, Value: DTO.Value}
 		}
 
 		return nil, err
@@ -51,11 +72,11 @@ func createAnswerValue(parsedAnswerValue *ticketAnswerValue) (*domain.TicketAnsw
 
 	switch parsedAnswerValue._type {
 	case domain.Flag:
-		answerValue.Flag = &parsedAnswerValue._bool
+		answerValue.Flag = parsedAnswerValue._bool
 	case domain.Number:
-		answerValue.Number = &parsedAnswerValue.number
+		answerValue.Number = parsedAnswerValue.number
 	case domain.String:
-		answerValue.String = &parsedAnswerValue._string
+		answerValue.String = parsedAnswerValue._string
 	}
 
 	return answerValue, nil

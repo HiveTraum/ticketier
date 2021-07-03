@@ -39,13 +39,15 @@ func TestTicketAnswerService_createNumberValue(t *testing.T) {
 	t.Parallel()
 
 	createTicketAnswerDTO := &domain.CreateTicketAnswerDTO{SubjectFieldID: uuid.New(), TicketID: uuid.New(), Value: 1}
-	createTicketAnswerDTO.SubjectField = &domain.SubjectField{
+	subjectField := &domain.SubjectField{
 		ID:        createTicketAnswerDTO.SubjectFieldID,
 		SubjectID: uuid.New(),
 		Type:      domain.Number,
 	}
 
-	answer, err := New(createTicketAnswerDTO)
+	entity := NewTicketAnswerEntity()
+
+	answer, err := entity.NewAnswer(createTicketAnswerDTO, subjectField)
 	value := 1.0
 	assert.Nil(t, err)
 	assert.Equal(t, &domain.TicketAnswer{
@@ -53,7 +55,7 @@ func TestTicketAnswerService_createNumberValue(t *testing.T) {
 		TicketID: createTicketAnswerDTO.TicketID,
 		Value: &domain.TicketAnswerValue{
 			Type:   domain.Number,
-			Number: &value,
+			Number: value,
 		},
 	}, answer)
 }
@@ -62,13 +64,15 @@ func TestTicketAnswerService_createNilValue(t *testing.T) {
 	t.Parallel()
 
 	createTicketAnswerDTO := &domain.CreateTicketAnswerDTO{SubjectFieldID: uuid.New(), TicketID: uuid.New(), Value: nil}
-	createTicketAnswerDTO.SubjectField = &domain.SubjectField{
+	subjectField := &domain.SubjectField{
 		ID:        createTicketAnswerDTO.SubjectFieldID,
 		SubjectID: uuid.New(),
 		Type:      domain.Number,
 	}
 
-	answer, err := New(createTicketAnswerDTO)
+	entity := NewTicketAnswerEntity()
+
+	answer, err := entity.NewAnswer(createTicketAnswerDTO, subjectField)
 	assert.Nil(t, err)
 	assert.Equal(t, &domain.TicketAnswer{
 		ID:       answer.ID,
@@ -83,14 +87,16 @@ func TestTicketAnswerService_createNilRequiredValue(t *testing.T) {
 	t.Parallel()
 
 	createTicketAnswerDTO := &domain.CreateTicketAnswerDTO{SubjectFieldID: uuid.New(), TicketID: uuid.New(), Value: nil}
-	createTicketAnswerDTO.SubjectField = &domain.SubjectField{
+	subjectField := &domain.SubjectField{
 		ID:        createTicketAnswerDTO.SubjectFieldID,
 		SubjectID: uuid.New(),
 		Type:      domain.Number,
 		Required:  true,
 	}
 
-	answer, err := New(createTicketAnswerDTO)
+	entity := NewTicketAnswerEntity()
+
+	answer, err := entity.NewAnswer(createTicketAnswerDTO, subjectField)
 	assert.Equal(t, domain.AnswerRequired, err)
 	assert.Nil(t, answer)
 }

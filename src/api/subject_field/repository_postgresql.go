@@ -75,14 +75,24 @@ func (repository *subjectFieldPostgreSQLRepository) InsertInTransaction(ctx cont
 }
 
 func insert(ctx context.Context, connection postgresql.Connection, fields []*domain.SubjectField) error {
+	if len(fields) == 0 {
+		return nil
+	}
+
 	batch := &pgx.Batch{}
 
 	for _, f := range fields {
 		batch.Queue("INSERT INTO subject_fields(id, subject_id, title, required, programmatic_id, \"order\", type) VALUES ($1, $2, $3, $4, $5, $6, $7);", f.ID, f.SubjectID, f.Title, f.Required, f.ProgrammaticID, f.Order, f.Type)
 	}
 
-	_, err := connection.SendBatch(ctx, batch).Exec()
-	return err
+	results := connection.SendBatch(ctx, batch)
+
+	_, err := results.Exec()
+	if err != nil {
+		return err
+	}
+
+	return results.Close()
 }
 
 func scanRow(row pgx.Row) (*domain.SubjectField, error) {

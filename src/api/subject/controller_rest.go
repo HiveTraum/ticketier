@@ -15,6 +15,7 @@ type subjectRESTController struct {
 func NewSubjectRESTController(router *mux.Router, service domain.SubjectService) {
 	controller := &subjectRESTController{service: service}
 	router.HandleFunc("/", controller.Create).Methods(http.MethodPost)
+	router.HandleFunc("/", controller.List).Methods(http.MethodGet)
 }
 
 func (controller *subjectRESTController) Create(w http.ResponseWriter, r *http.Request) {

@@ -1,2 +1,4 @@
 .idea
 src/admin/node_modules
+src/admin/.parcel-cache
+src/admin/dist

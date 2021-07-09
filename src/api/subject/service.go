@@ -2,6 +2,7 @@ package subject
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"src/domain"
 )
 
@@ -54,15 +55,27 @@ func (service *subjectService) Create(ctx context.Context, DTOs []*domain.Create
 		return nil, err
 	}
 
-	err = service.repository.InsertInTransaction(ctx, subjects, transaction)
+	err = service.insert(ctx, transaction, subjects, fields)
 	if err != nil {
-		return nil, err
-	}
-
-	err = service.fieldsRepository.InsertInTransaction(ctx, fields, transaction)
-	if err != nil {
-		return nil, err
+		err = service.repository.Rollback(ctx, transaction)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = service.repository.Commit(ctx, transaction)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return subjects, nil
+}
+
+func (service *subjectService) insert(ctx context.Context, transaction uuid.UUID, subjects []*domain.Subject, fields []*domain.SubjectField) error {
+	err := service.repository.InsertInTransaction(ctx, subjects, transaction)
+	if err != nil {
+		return err
+	}
+
+	return service.fieldsRepository.InsertInTransaction(ctx, fields, transaction)
 }

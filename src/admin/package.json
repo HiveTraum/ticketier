@@ -2,18 +2,20 @@
   "name": "admin",
   "version": "1.0.0",
   "scripts": {
-    "start": "web-dev-server --open index.html --node-resolve --watch"
+    "start": "parcel serve index.html",
+    "build": "parcel build index.html"
   },
   "dependencies": {
-    "@blueprintjs/core": "^4.0.0-alpha.0",
-    "esbuild": "^0.12.5",
+    "@material-ui/core": "4.11.4",
+    "@react-keycloak/web": "3.4.0",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react-dom": "^17.0.2",
+    "react-router-dom": "^5.2.0"
   },
   "devDependencies": {
     "@types/react": "^17.0.8",
     "@types/react-dom": "^17.0.5",
-    "@web/dev-server": "^0.1.17",
-    "@web/dev-server-esbuild": "^0.2.12"
+    "@types/react-router-dom": "^5.1.7",
+    "parcel": "^2.0.0-nightly.750"
   }
 }

@@ -59,8 +59,14 @@ func insert(ctx context.Context, connection postgresql.Connection, subjects []*d
 		batch.Queue("INSERT INTO subjects(id, title, parent_id, created_by) VALUES ($1, $2, $3, $4);", s.ID, s.Title, s.ParentID, s.CreatedBy)
 	}
 
-	_, err := connection.SendBatch(ctx, batch).Exec()
-	return err
+	results := connection.SendBatch(ctx, batch)
+
+	_, err := results.Exec()
+	if err != nil {
+		return err
+	}
+
+	return results.Close()
 }
 
 func scanRow(row pgx.Row) (*domain.Subject, error) {
@@ -77,7 +83,7 @@ func scanRow(row pgx.Row) (*domain.Subject, error) {
 }
 
 func scanRows(rows pgx.Rows) ([]*domain.Subject, error) {
-	var subjects []*domain.Subject
+	subjects := make([]*domain.Subject, 0)
 
 	for rows.Next() {
 		subject, err := scanRow(rows)

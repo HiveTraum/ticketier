@@ -14,10 +14,10 @@ type Subject struct {
 }
 
 type CreateSubjectDTO struct {
-	Title     string
-	ParentID  uuid.UUID
-	CreatedBy uuid.UUID
-	Fields    []*CreateSubjectFieldDTO
+	Title     string                   `json:"title,omitempty"`
+	ParentID  uuid.UUID                `json:"parentID,omitempty"`
+	CreatedBy uuid.UUID                `json:"createdBy,omitempty"`
+	Fields    []*CreateSubjectFieldDTO `json:"fields,omitempty"`
 }
 
 type SubjectEntity interface {
